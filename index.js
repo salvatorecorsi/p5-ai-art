@@ -16,23 +16,18 @@ const openai = new OpenAI({
 
 app.post('/api/generate', async (req, res) => {
     try {
-
-        const generateText = async () => {
+        const generateFunction = async () => {
             const completion = await openai.chat.completions.create({
-                messages: [{ role: "system", content: "Context: " + prompt + ". Write the content of the function in this way: <code>js of the function that draw the context described</code>, ignore all the configuration of p5, just write the function that draw something. Write now, only <code>js code, without wrapping in \"function {}\"</code>. Comments are not allowed." }],
+                messages: [
+                    { role: "system", content: "You are an artist that express his art through code. You are using p5.js library to draw shapes and colors. You are asked to draw a specific context." },
+                    { role: "user", content: "Context: " + prompt + ". Center the draw, consider the canvas width is: "+req.body.canvasSize.width+" and the canvas height is: "+req.body.canvasSize.height+". Write the content of the function in this way: <code>js of the function that draw the context described</code>, ignore all the configuration of p5, just write the function that draw something. Write now, only <code>js code, without wrapping in \"function {}\"</code>. Do not response with: -comments -` -```js -amy extra char"}
+                ],
                 model: "gpt-4o",
             });
 
-            // remove all \n from the response
-            completion.choices[0].message.content = completion.choices[0].message.content.replace(/`/g, '');
-            // remove js from the response
-            completion.choices[0].message.content = completion.choices[0].message.content.replace(/js/g, '');
-            // remove <code> and </code> from the response
-            completion.choices[0].message.content = completion.choices[0].message.content.replace(/<code>/g, '');
-            completion.choices[0].message.content = completion.choices[0].message.content.replace(/<\/code>/g, '');
             return '() => {' + completion.choices[0].message.content + '}';
         };
-        res.text = await generateText();
+        res.text = await generateFunction();
         res.json({ function: res.text });
 
     } catch (error) {
