@@ -8,8 +8,15 @@
 
 body {
     font-family: "Space Mono", monospace;
-    background: #222;
+    background: #f1f1f1;
     font-size: 1.2vw;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    gap: 1rem;
 }
 
 button,
@@ -17,7 +24,7 @@ textarea,
 input {
     font-family: "Space Mono", monospace;
     font-size: 1rem;
-    color: #fff;
+    color: black;
     border: none;
     padding: 1rem;
     outline: none;
@@ -25,18 +32,78 @@ input {
     max-width: 600px;
 }
 
+.elevation {
+    position: relative;
+    box-shadow: 0 5px 11px -1px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s;
+    border-radius: 100%;
+}
+
+.elevation.pressed {
+    box-shadow: 0 2px 11px -7px rgba(0, 0, 0, 0.3);
+}
+
 button {
-    padding: 1rem;
     font-size: 1.5rem;
     cursor: pointer;
-    background: transparent;
-    border: 1px solid white;
-    opacity: 0.5;
+    background: white;
     transition: all 0.3s;
+    aspect-ratio: 1;
+    position: relative;
+    padding: 0;
+    width: 64px;
+    border-radius: 100%;
+    position: relative;
+    transform: translateY(-15%);
 }
 
 button:hover {
-    opacity: 1;
+    background: #f9f9f9;
+}
+
+button svg {
+    position: absolute;
+    inset: 0;
+    fill: black;
+    aspect-ratio: 1;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    transition: color 0.3s;
+}
+
+
+.elevation:before {
+    content: '';
+    position: absolute;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: -1;
+    border-radius: 100px;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    width: 100%;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 70%;
+    transition: all 0.3s;
+}
+
+.elevation.pressed:before {
+    height: 50%;
+}
+
+.pressed button {
+    transform: translateY(-5%);
+}
+
+.pressed svg {
+    fill: #999;
+}
+
+.pressed {
+    cursor: wait;
+    pointer-events: none;
 }
 
 #ui {
@@ -44,15 +111,46 @@ button:hover {
     width: 90%;
     max-width: 600px;
     left: 50%;
-    bottom: 100px;
+    bottom: 30px;
     transform: translateX(-50%);
+    display: inline-flex;
+    justify-content: center;
+    gap: 1rem;
 }
 
 #art-container {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    height: 100%;
-    width: 100%;
-    transform: translate(-50%, -50%);
+    position: relative;
+    height: 50vh;
+    width: 90%;
+    max-width: 768px;
+    box-shadow: 1px 10px 44px -18px rgba(0, 0, 0, 0.4);
+    background: white;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+#art-description {
+    font-size: 1rem;
+    max-width: 768px;
+    width: 90%;
+    animation: fadeIn 1s;
+}
+
+#prompt {
+    max-height: 200px;
+    padding: 0 1rem;
+    font-size: 1rem;
+    height: 1rem;
+    background: transparent;
+    border-bottom: 1px solid #bbbbbb;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }

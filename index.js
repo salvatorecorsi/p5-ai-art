@@ -1,8 +1,13 @@
+const fs = require('fs');
+if (!fs.existsSync('./config.json')) {
+    fs.writeFileSync('./config.json', JSON.stringify({ openaiApiKey: "", prompt: "" }, null, 2));
+}
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
 const OpenAI = require("openai");
-const { openaiApiKey, prompt } = require("./config");
+const { openaiApiKey, options } = require("./config");
 
 const app = express();
 const port = 3000;
@@ -14,22 +19,71 @@ const openai = new OpenAI({
     apiKey: openaiApiKey
 });
 
+
+function sanitizeResponse(response) {
+    response = response.replace(/```json/g, '');
+    response = response.replace(/```javascript/g, '');
+    response = response.replace(/```js/g, '');
+    response = response.replace(/`/g, '');
+    response = response.replace('function draw() {', '() => {');
+    response = response.replace('function draw(){', '() => {');
+
+    let result = {
+        draw_function: '',
+        description: ''
+    };
+    try {
+        result = JSON.parse(response);
+    }
+    catch (error) {
+        result['description'] = 'An error occurred while parsing the response from the AI model.';
+    }
+
+    return result;
+}
+
+async function generateFunction(prompt) {
+
+    let additionalOptions = '';
+    let hasOptions = false;
+    for (let option in options) {
+        if (options[option]) {
+            hasOptions = true;
+            break;
+        }
+    }
+
+    if (hasOptions) {
+        additionalOptions = 'I would love if you use this effects: ';
+        for (let option in options) {
+            if (options[option]) {
+                additionalOptions += option + ', ';
+            }
+        }
+    }
+
+    const formatterEndPrompt = " Write complex code! There is already setup() function and the canvas already exist, so you MUST CREATE DRAW FUNCTION ONLY. " + options + " Response must be a JSON that has 2 attribute: {'draw_function': 'ONLY the draw function in JS code, no comments or empty lines or any others functions. Write a lot of code complex artwork with 3d', 'description': 'Choose the name of the artwork'}";
+
+    const completion = await openai.chat.completions.create({
+        messages: [
+            {
+                role: "system", content: "You are an artist that express his art through code using p5.js library to draw shapes and colors." + formatterEndPrompt
+            },
+            { role: "user", content: prompt + formatterEndPrompt },
+        ],
+        model: "gpt-4o",
+        temperature: 1,
+    });
+
+    const result = sanitizeResponse(completion.choices[0].message.content);
+
+    return result;
+};
+
 app.post('/api/generate', async (req, res) => {
     try {
-        const generateFunction = async () => {
-            const completion = await openai.chat.completions.create({
-                messages: [
-                    { role: "system", content: "You are an artist that express his art through code. You are using p5.js library to draw shapes and colors. You are asked to draw a specific context." },
-                    { role: "user", content: "Context: " + prompt + ". Center the draw, consider the canvas width is: "+req.body.canvasSize.width+" and the canvas height is: "+req.body.canvasSize.height+". Write the content of the function in this way: <code>js of the function that draw the context described</code>, ignore all the configuration of p5, just write the function that draw something. Write now, only <code>js code, without wrapping in \"function {}\"</code>. Do not response with: -comments -` -```js -amy extra char"}
-                ],
-                model: "gpt-4o",
-            });
-
-            return '() => {' + completion.choices[0].message.content + '}';
-        };
-        res.text = await generateFunction();
-        res.json({ function: res.text });
-
+        const response = await generateFunction(req.body.prompt);
+        res.json(response);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
