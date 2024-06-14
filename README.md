@@ -31,7 +31,10 @@ This project creates a web application that uses OpenAI's GPT-4 to generate art 
    git clone https://github.com/salvatorecorsi/p5-ai-art/
    cd p5-ai-art
 
-2. **Create config.json**:
+2. **Get an API Key for GPT**:
+Just go here: https://platform.openai.com/api-keys
+
+3. **Create config.json**:
 As said, create config.json:
 ```json
     {
